@@ -1,0 +1,22 @@
+# Postgres — host tarafı portu .env'deki HABIE_DB_PORT'tan gelir (varsayılan 55432).
+# 5432 bilerek kullanılmıyor: makinende zaten bir Postgres olabilir.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: habie-db
+    environment:
+      POSTGRES_USER: habie
+      POSTGRES_PASSWORD: habie
+      POSTGRES_DB: habie
+    ports:
+      - "${HABIE_DB_PORT:-55432}:5432"
+    volumes:
+      - habie-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U habie -d habie"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  habie-pg:

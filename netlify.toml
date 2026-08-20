@@ -1,0 +1,23 @@
+# Netlify — SADECE frontend + host uygulamanın token ucu.
+# Gateway burada çalışamaz: Netlify Functions serverless, kalıcı WebSocket tutamaz.
+
+[build]
+  command = "npm install && npm --workspace @habie/demo run build"
+  publish = "packages/demo/dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# ÖNCE fonksiyon yolu — sıra önemli, ilk eşleşen kazanır.
+# Bu olmadan aşağıdaki SPA catch-all /api/habie-token isteğini yutabilir.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# SPA fallback — en sonda kalmalı
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

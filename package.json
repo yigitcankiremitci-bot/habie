@@ -1,0 +1,29 @@
+{
+  "name": "habie",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "ports": "node scripts/check-ports.mjs",
+    "dev": "node scripts/dev.mjs",
+    "dev:gateway": "npm --workspace @habie/gateway run dev",
+    "dev:token": "npm --workspace @habie/demo run token",
+    "dev:demo": "npm --workspace @habie/demo run dev",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d",
+    "test:db": "node scripts/test-db.mjs"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^2.8.1",
+    "@types/jsonwebtoken": "^9.0.6"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

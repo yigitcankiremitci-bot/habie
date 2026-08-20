@@ -1,0 +1,22 @@
+# Render — Habie gateway. UYUMAYAN bir servis olmak zorunda:
+# WebSocket bağlantısı spin-down'ı kaldırmaz.
+services:
+  - type: web
+    name: habie-gateway
+    runtime: node
+    plan: starter          # free planda 15 dk sonra uyur → WS kopar
+    region: frankfurt      # Türkiye'ye en yakın Render bölgesi
+    buildCommand: npm install
+    startCommand: npm --workspace @habie/gateway run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false        # Neon bağlantı dizesi — panelden gir
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: APP_SECRETS
+        sync: false        # {"projelio":"...","stokla":"..."} — panelden gir
+      - key: ALLOWED_ORIGINS
+        sync: false        # https://<site>.netlify.app
