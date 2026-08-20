@@ -17,6 +17,10 @@ const PROJELIO_API = import.meta.env.DEV
   ? '/projelio-api'
   : (import.meta.env.VITE_PROJELIO_API ?? 'https://projelio-backend.onrender.com');
 
+/** Projelio'nun web uygulaması — /habie devir sayfasının bulunduğu yer. */
+const PROJELIO_WEB = (import.meta.env.VITE_PROJELIO_WEB ?? 'https://projelio.netlify.app')
+  .replace(/\/$/, '');
+
 const TOKEN_KEY = 'projelio_token';
 /** Ajan jetonu 30 dk ömürlü — dolmadan önce tazele. */
 const REFRESH_MS = 20 * 60 * 1000;
@@ -27,6 +31,23 @@ type Session = {
   label: string;
   mode: 'projelio' | 'demo';
 };
+
+/** /habie/session ve /habie/exchange aynı gövdeyi döndürüyor. */
+function toSession(d: any): Session {
+  return {
+    assertion: d.assertion,
+    label: `${d.user.name} · Projelio`,
+    mode: 'projelio',
+    agent: {
+      id: d.agent.id,
+      name: d.agent.name,
+      baseUrl: PROJELIO_API,
+      chatPath: d.agent.chatPath,
+      confirmPath: d.agent.confirmPath,
+      token: d.agent.token,
+    },
+  };
+}
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -46,31 +67,51 @@ export default function App() {
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d?.message ?? `Projelio oturumu alınamadı (${r.status})`);
-
-    return {
-      assertion: d.assertion,
-      label: `${d.user.name} · Projelio`,
-      mode: 'projelio',
-      agent: {
-        id: d.agent.id,
-        name: d.agent.name,
-        baseUrl: PROJELIO_API,
-        chatPath: d.agent.chatPath,
-        confirmPath: d.agent.confirmPath,
-        token: d.agent.token,
-      },
-    };
+    return toSession(d);
   }, []);
 
-  // Açılışta saklı Projelio jetonu varsa onunla devam et
+  /**
+   * Devir kodunu oturuma çevirir.
+   *
+   * Projelio'daki /habie sayfası bizi ?code=... ile buraya yolluyor. Kod tek
+   * kullanımlık ve 2 dakika ömürlü. Kullanıcının Projelio'ya nasıl girdiği
+   * (parola, Google) hiç fark etmiyor — sadece açık bir oturumu olması yeterli.
+   */
+  const exchangeCode = useCallback(async (code: string): Promise<Session> => {
+    const r = await fetch(`${PROJELIO_API}/habie/exchange`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d?.message ?? 'Bağlantı kodu geçersiz. Tekrar dene.');
+    return toSession(d);
+  }, []);
+
+  // Açılış: önce devir kodu, sonra saklı jeton
   useEffect(() => {
+    const url = new URL(location.href);
+    const code = url.searchParams.get('code');
+
+    if (code) {
+      // Kodu adres çubuğundan hemen temizle — yenilemede tekrar denenmesin
+      url.searchParams.delete('code');
+      history.replaceState(null, '', url.pathname + url.search);
+
+      exchangeCode(code)
+        .then(setSession)
+        .catch(e => setErr(e.message))
+        .finally(() => setBusy(false));
+      return;
+    }
+
     const saved = localStorage.getItem(TOKEN_KEY);
     if (!saved) { setBusy(false); return; }
     loadProjelio(saved)
       .then(setSession)
       .catch(e => { localStorage.removeItem(TOKEN_KEY); setErr(e.message); })
       .finally(() => setBusy(false));
-  }, [loadProjelio]);
+  }, [loadProjelio, exchangeCode]);
 
   // Ajan jetonunu süresi dolmadan tazele
   useEffect(() => {
@@ -169,6 +210,7 @@ function SignIn({ onLogin, onDemo, err }: {
 }) {
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
+  const [pwMode, setPwMode] = useState(false);
 
   return (
     <Center>
@@ -176,33 +218,56 @@ function SignIn({ onLogin, onDemo, err }: {
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
           <img src="/logo.png" alt="Habie" width={92} height={92}
                style={{ objectFit: 'contain', display: 'block', margin: '0 auto 10px' }} />
-          <h2 style={{ margin: 0, fontSize: 22, letterSpacing: -.3 }}>Habie</h2>
-          <p style={{ color: '#667781', fontSize: 13, margin: '4px 0 0' }}>
-            Lio ile konuşmak için Projelio hesabınla gir.
+          <h2 style={{ margin: 0, fontSize: 24, letterSpacing: -.3 }}>Habie</h2>
+          <p style={{ color: '#667781', fontSize: 14, margin: '4px 0 0' }}>
+  Lio ile konuşmak için Projelio hesabınla bağlan.
           </p>
         </div>
 
-        <input style={inp} placeholder="e-posta" value={email} autoComplete="username"
-               onChange={e => setEmail(e.target.value)} />
-        <input style={{ ...inp, marginTop: 8 }} placeholder="parola" type="password"
-               value={pw} autoComplete="current-password"
-               onChange={e => setPw(e.target.value)}
-               onKeyDown={e => e.key === 'Enter' && onLogin(email, pw)} />
-
-        <button style={{ ...btn, width: '100%', marginTop: 10 }} onClick={() => onLogin(email, pw)}>
-          Projelio ile gir
-        </button>
+        {/*
+          Ana yol: Projelio'daki mevcut oturumu devral.
+          Google ile kaydolanlar da buradan geçiyor — parolaları yok.
+        */}
+        <a href={`${PROJELIO_WEB}/habie`} style={{ ...btn, width: '100%', display: 'block',
+                 textAlign: 'center', textDecoration: 'none', boxSizing: 'border-box' }}>
+          Projelio ile bağlan
+        </a>
+        <div style={{ fontSize: 12.5, color: '#8696a0', marginTop: 8, lineHeight: 1.5, textAlign: 'center' }}>
+          Projelio'da girişliysen anında döneceksin. Değilsen önce Projelio'nun
+          giriş ekranı açılır — Google dahil her yöntem çalışır.
+        </div>
 
         {err && <div style={errBox}>{err}</div>}
+
+        <button style={{ ...linkBtn, marginTop: 14 }} onClick={() => setPwMode(v => !v)}>
+          {pwMode ? 'gizle' : 'e-posta ve parolayla gir'}
+        </button>
+
+        {pwMode && (
+          <div style={{ marginTop: 8 }}>
+            <input style={inp} placeholder="e-posta" value={email} autoComplete="username"
+                   onChange={e => setEmail(e.target.value)} />
+            <input style={{ ...inp, marginTop: 8 }} placeholder="parola" type="password"
+                   value={pw} autoComplete="current-password"
+                   onChange={e => setPw(e.target.value)}
+                   onKeyDown={e => e.key === 'Enter' && onLogin(email, pw)} />
+            <button style={{ ...btn, width: '100%', marginTop: 8 }} onClick={() => onLogin(email, pw)}>
+              Gir
+            </button>
+            <div style={{ fontSize: 12, color: '#8696a0', marginTop: 6, lineHeight: 1.5 }}>
+              Google ile kaydolduysan parolan yoktur; yukarıdaki bağlantıyı kullan.
+            </div>
+          </div>
+        )}
 
         <div style={sep}>veya mesajlaşmayı denemek için</div>
         <div style={{ display: 'flex', gap: 6 }}>
           {['Ayşe', 'Zeynep', 'Ahmet'].map((n, i) => (
-            <button key={i} style={{ ...btn, ...ghost, flex: 1, fontSize: 12.5, padding: '8px 4px' }}
+            <button key={i} style={{ ...btn, ...ghost, flex: 1, fontSize: 13.5, padding: '8px 4px' }}
                     onClick={() => onDemo(i)}>{n}</button>
           ))}
         </div>
-        <div style={{ fontSize: 11.5, color: '#8696a0', marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 12.5, color: '#8696a0', marginTop: 8, lineHeight: 1.5 }}>
           Demo kullanıcılarında Lio yok — mesajlaşmayı iki tarayıcıda test etmek için.
         </div>
       </div>
@@ -216,11 +281,13 @@ const Center = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const bar: React.CSSProperties = { padding: '8px 14px', background: '#111b21', color: '#fff', fontSize: 13, display: 'flex', gap: 12, alignItems: 'center' };
-const pill: React.CSSProperties = { marginLeft: 'auto', fontSize: 11, background: '#0f766e', padding: '2px 8px', borderRadius: 20 };
-const link: React.CSSProperties = { background: 'none', border: 0, color: '#8696a0', cursor: 'pointer', fontSize: 12 };
-const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d8dde1', fontSize: 14, boxSizing: 'border-box', outline: 'none' };
-const btn: React.CSSProperties = { border: 0, background: '#0f766e', color: '#fff', borderRadius: 8, padding: '10px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer' };
+const bar: React.CSSProperties = { padding: '8px 14px', background: '#111b21', color: '#fff', fontSize: 14, display: 'flex', gap: 12, alignItems: 'center' };
+const pill: React.CSSProperties = { marginLeft: 'auto', fontSize: 12, background: '#0f766e', padding: '2px 8px', borderRadius: 20 };
+const link: React.CSSProperties = { background: 'none', border: 0, color: '#8696a0', cursor: 'pointer', fontSize: 13 };
+// 16px altına inmesin — iOS Safari giriş odaklanınca sayfayı yakınlaştırıyor
+const inp: React.CSSProperties = { width: '100%', padding: '12px 13px', borderRadius: 8, border: '1px solid #d8dde1', fontSize: 16, boxSizing: 'border-box', outline: 'none' };
+const btn: React.CSSProperties = { border: 0, background: '#0f766e', color: '#fff', borderRadius: 8, padding: '10px 14px', fontSize: 15, fontWeight: 600, cursor: 'pointer' };
+const linkBtn: React.CSSProperties = { background: 'none', border: 0, color: '#0f766e', cursor: 'pointer', fontSize: 13, textDecoration: 'underline', padding: 0, width: '100%' };
 const ghost: React.CSSProperties = { background: '#e3e7ea', color: '#41525d' };
-const errBox: React.CSSProperties = { marginTop: 10, padding: '9px 11px', borderRadius: 8, background: '#fee2e2', color: '#991b1b', fontSize: 12.5, lineHeight: 1.45 };
-const sep: React.CSSProperties = { margin: '18px 0 8px', fontSize: 11.5, color: '#8696a0', textAlign: 'center' };
+const errBox: React.CSSProperties = { marginTop: 10, padding: '9px 11px', borderRadius: 8, background: '#fee2e2', color: '#991b1b', fontSize: 13.5, lineHeight: 1.45 };
+const sep: React.CSSProperties = { margin: '18px 0 8px', fontSize: 12.5, color: '#8696a0', textAlign: 'center' };

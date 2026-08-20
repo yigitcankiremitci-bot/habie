@@ -103,7 +103,7 @@ export function HabieChat() {
       <div style={S.center}>
         <div style={{ maxWidth: 320, width: '100%' }}>
           <h3 style={{ margin: '0 0 6px' }}>Kullanıcı adı seç</h3>
-          <p style={{ color: '#667781', fontSize: 13, marginTop: 0 }}>
+          <p style={{ color: '#667781', fontSize: 14, marginTop: 0 }}>
             Seni bu adla bulacaklar. 3–20 karakter, küçük harf/rakam/alt çizgi.
           </p>
           <input style={S.input} className="habie-input" value={uname} autoFocus
@@ -238,7 +238,7 @@ export function HabieChat() {
         )}
         {logoUrl && <img src={logoUrl} alt="" style={S.logoSm} />}
         <b>Habie</b>
-        <span style={{ marginLeft: 'auto', fontSize: 11, color: online ? '#0f766e' : '#b45309' }}>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: online ? '#0f766e' : '#b45309' }}>
           {online ? '● çevrimiçi' : '○ bağlanıyor'}
         </span>
         {wide && (
@@ -286,7 +286,7 @@ export function HabieChat() {
             {fixMsg && <div style={S.warnNote}>{fixMsg}</div>}
 
             {setup.secure && !(setup.ios && !setup.installed) && (
-              <button style={{ ...S.btn, marginTop: 8, padding: '7px 12px', fontSize: 12.5 }}
+              <button style={{ ...S.btn, marginTop: 8, padding: '7px 12px', fontSize: 13.5 }}
                       disabled={fixing} onClick={fixSetup}>
                 {fixing ? 'Ayarlanıyor…' : 'Düzelt'}
               </button>
@@ -304,8 +304,8 @@ export function HabieChat() {
         <div style={S.found}>
           <div style={{ ...S.av, background: col(found.displayName) }}>{ini(found.displayName)}</div>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>{found.displayName}</div>
-            <div style={{ fontSize: 12, color: '#667781' }}>@{found.username}</div>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>{found.displayName}</div>
+            <div style={{ fontSize: 13, color: '#667781' }}>@{found.username}</div>
           </div>
           <button style={S.btn} onClick={async () => {
             const r = await transport.addContact(found.id);
@@ -336,14 +336,14 @@ export function HabieChat() {
           <div style={S.reqTitle}>Gelen istekler</div>
           {incoming.map(c => (
             <div key={c.id} style={S.reqRow}>
-              <div style={{ ...S.av, background: col(c.displayName), width: 34, height: 34, fontSize: 12 }}>
+              <div style={{ ...S.av, background: col(c.displayName), width: 34, height: 34, fontSize: 13 }}>
                 {ini(c.displayName)}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.displayName}</div>
-                <div style={{ fontSize: 11.5, color: '#667781' }}>@{c.username}</div>
+                <div style={{ fontWeight: 600, fontSize: 14.5 }}>{c.displayName}</div>
+                <div style={{ fontSize: 12.5, color: '#667781' }}>@{c.username}</div>
               </div>
-              <button style={{ ...S.btn, padding: '5px 11px', fontSize: 12 }}
+              <button style={{ ...S.btn, padding: '5px 11px', fontSize: 13 }}
                       onClick={async () => {
                         const r = await transport.acceptContact(c.id);
                         await reload();
@@ -367,7 +367,7 @@ export function HabieChat() {
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={S.rowTitle}>
                   {c.title}
-                  {c.pinned === 1 && <span style={{ fontSize: 10 }}>📌</span>}
+                  {c.pinned === 1 && <span style={{ fontSize: 11 }}>📌</span>}
                   {c.workspaceId && <span style={S.tag}>{c.workspaceId}</span>}
                 </div>
                 <div style={S.prevRow}>
@@ -397,7 +397,7 @@ export function HabieChat() {
   const chatPanel = !conv ? (
     <div style={S.center}>
       <div style={{ textAlign: 'center', color: '#667781', maxWidth: 320 }}>
-        <div style={{ fontSize: 40 }}>💬</div>
+        <div style={{ fontSize: 44 }}>💬</div>
         Mesajların bu cihazda saklanır. Sunucuda arşiv tutulmaz.
       </div>
     </div>
@@ -413,7 +413,7 @@ export function HabieChat() {
         {wide && !sidebar && (
           <button style={S.iconBtn} onClick={() => setSidebar(true)} title="Paneli göster">☰</button>
         )}
-        <div style={{ ...S.av, background: col(conv.title), width: 36, height: 36, fontSize: 13 }}>
+        <div style={{ ...S.av, background: col(conv.title), width: 36, height: 36, fontSize: 14 }}>
           {ini(conv.title)}
         </div>
         <div style={{ minWidth: 0 }}>
@@ -441,9 +441,9 @@ export function HabieChat() {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                    <button style={{ ...S.btn, padding: '6px 12px', fontSize: 12.5 }}
+                    <button style={{ ...S.btn, padding: '6px 12px', fontSize: 13.5 }}
                             disabled={thinking} onClick={() => resolvePending(m, true)}>Onayla</button>
-                    <button style={{ ...S.btn, ...S.btnGhost, padding: '6px 12px', fontSize: 12.5 }}
+                    <button style={{ ...S.btn, ...S.btnGhost, padding: '6px 12px', fontSize: 13.5 }}
                             disabled={thinking} onClick={() => resolvePending(m, false)}>Vazgeç</button>
                   </div>
                 )}
@@ -487,8 +487,8 @@ export function HabieChat() {
     <div style={S.wrap}>
       <style>{`
         @keyframes habieBlink{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
-        /* iOS Safari, 16px'ten küçük yazı tipli girişte sayfayı otomatik yakınlaştırır */
-        @media (max-width: 899px){ .habie-input{ font-size:16px !important } }
+        /* Girişler her yerde 16px — iOS'un yakınlaştırma eşiği (bkz. S.input) */
+        .habie-input{ font-size:16px !important }
       `}</style>
 
       {/* Geniş ekran: sabit panel. Dar ekran: sohbet yokken tam ekran liste. */}
@@ -524,40 +524,42 @@ const S: Record<string, React.CSSProperties> = {
   main: { flex: 1, display: 'flex', flexDirection: 'column', background: '#e9e3dc', minWidth: 0 },
   head: { display: 'flex', gap: 10, alignItems: 'center', padding: '10px 12px', background: '#f7f9fa', borderBottom: '1px solid #e3e7ea', flexShrink: 0 },
   chatTitle: { fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  sub: { fontSize: 12, color: '#667781', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  sub: { fontSize: 13, color: '#667781', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   center: { flex: 1, display: 'grid', placeItems: 'center', padding: 24, height: '100%' },
   logoSm: { width: 26, height: 26, objectFit: 'contain', flexShrink: 0 },
-  iconBtn: { border: 0, background: 'transparent', color: '#41525d', fontSize: 19, lineHeight: 1, cursor: 'pointer', padding: '2px 4px', flexShrink: 0 },
-  warn: { display: 'flex', gap: 8, alignItems: 'flex-start', margin: '8px 10px 0', padding: 9, borderRadius: 8, background: '#fff5e0', color: '#7a5a12', fontSize: 11.5, lineHeight: 1.45, border: '1px solid #f0dfb4' },
-  warnX: { border: 0, background: 'transparent', color: '#a08340', cursor: 'pointer', fontSize: 12, padding: 0, lineHeight: 1 },
-  input: { padding: '9px 12px', borderRadius: 8, border: '1px solid #e3e7ea', fontSize: 14, width: '100%', outline: 'none', boxSizing: 'border-box' },
+  iconBtn: { border: 0, background: 'transparent', color: '#41525d', fontSize: 21, lineHeight: 1, cursor: 'pointer', padding: '2px 4px', flexShrink: 0 },
+  warn: { display: 'flex', gap: 8, alignItems: 'flex-start', margin: '8px 10px 0', padding: 9, borderRadius: 8, background: '#fff5e0', color: '#7a5a12', fontSize: 12.5, lineHeight: 1.45, border: '1px solid #f0dfb4' },
+  warnX: { border: 0, background: 'transparent', color: '#a08340', cursor: 'pointer', fontSize: 13, padding: 0, lineHeight: 1 },
+  // 16px ALTINA İNMESİN: iOS Safari, odaklanılan girişin yazı tipi 16px'ten
+  // küçükse sayfayı otomatik yakınlaştırıyor ve düzen sıçrıyor.
+  input: { padding: '11px 13px', borderRadius: 8, border: '1px solid #e3e7ea', fontSize: 16, width: '100%', outline: 'none', boxSizing: 'border-box' },
   row: { display: 'flex', gap: 11, padding: '11px 12px', cursor: 'pointer', alignItems: 'center', borderBottom: '1px solid #f0f2f4' },
-  rowTitle: { fontWeight: 600, fontSize: 14.5, display: 'flex', gap: 6, alignItems: 'center', minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  rowTitle: { fontWeight: 600, fontSize: 15.5, display: 'flex', gap: 6, alignItems: 'center', minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   prevRow: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 2, minWidth: 0 },
-  badge: { background: '#0f766e', color: '#fff', borderRadius: 11, minWidth: 20, height: 20, padding: '0 6px', fontSize: 11.5, fontWeight: 700, display: 'grid', placeItems: 'center', flexShrink: 0 },
-  checkList: { margin: '6px 0 0', padding: 0, listStyle: 'none', fontSize: 11.5, lineHeight: 1.7 },
-  warnNote: { marginTop: 6, fontSize: 11.5, lineHeight: 1.5, opacity: .95 },
-  prev: { flex: 1, fontSize: 12.5, color: '#667781', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 },
-  av: { width: 44, height: 44, borderRadius: '50%', display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 700, flexShrink: 0, fontSize: 15 },
+  badge: { background: '#0f766e', color: '#fff', borderRadius: 11, minWidth: 20, height: 20, padding: '0 6px', fontSize: 12.5, fontWeight: 700, display: 'grid', placeItems: 'center', flexShrink: 0 },
+  checkList: { margin: '6px 0 0', padding: 0, listStyle: 'none', fontSize: 12.5, lineHeight: 1.7 },
+  warnNote: { marginTop: 6, fontSize: 12.5, lineHeight: 1.5, opacity: .95 },
+  prev: { flex: 1, fontSize: 13.5, color: '#667781', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 },
+  av: { width: 44, height: 44, borderRadius: '50%', display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 700, flexShrink: 0, fontSize: 16 },
   found: { display: 'flex', gap: 10, alignItems: 'center', margin: '0 10px 8px', padding: 10, borderRadius: 9, background: '#f7f9fa', border: '1px solid #e3e7ea' },
-  hint: { padding: '4px 14px 10px', fontSize: 12, color: '#667781', lineHeight: 1.5 },
-  notice: { margin: '0 10px 8px', padding: '8px 10px', borderRadius: 8, background: '#e6f4f1', color: '#0f766e', fontSize: 12.5, cursor: 'pointer', lineHeight: 1.45 },
-  btn: { border: 0, background: '#0f766e', color: '#fff', borderRadius: 8, padding: '9px 14px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
+  hint: { padding: '4px 14px 10px', fontSize: 13, color: '#667781', lineHeight: 1.5 },
+  notice: { margin: '0 10px 8px', padding: '8px 10px', borderRadius: 8, background: '#e6f4f1', color: '#0f766e', fontSize: 13.5, cursor: 'pointer', lineHeight: 1.45 },
+  btn: { border: 0, background: '#0f766e', color: '#fff', borderRadius: 8, padding: '9px 14px', fontSize: 14.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
   btnGhost: { background: '#e3e7ea', color: '#41525d' },
-  tag: { fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 5, background: '#dbeafe', color: '#1e40af', flexShrink: 0 },
+  tag: { fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 5, background: '#dbeafe', color: '#1e40af', flexShrink: 0 },
   reqBox: { margin: '0 10px 8px', padding: '8px 10px', borderRadius: 9, background: '#fff8e6', border: '1px solid #f0dfb4' },
-  reqTitle: { fontSize: 11, fontWeight: 700, letterSpacing: .5, textTransform: 'uppercase', color: '#8a6d1f', marginBottom: 6 },
+  reqTitle: { fontSize: 12, fontWeight: 700, letterSpacing: .5, textTransform: 'uppercase', color: '#8a6d1f', marginBottom: 6 },
   reqRow: { display: 'flex', gap: 9, alignItems: 'center', padding: '4px 0' },
   confirm: { marginTop: 8, padding: '9px 11px', borderRadius: 8, background: '#fff5e0', border: '1px solid #f0dfb4' },
-  confirmHead: { fontSize: 11, fontWeight: 700, color: '#8a6d1f', letterSpacing: .3, marginBottom: 4 },
-  confirmBody: { fontSize: 13, color: '#5c4a10', lineHeight: 1.45 },
-  confirmDone: { fontSize: 12.5, fontWeight: 600, color: '#0f766e', marginTop: 6 },
+  confirmHead: { fontSize: 12, fontWeight: 700, color: '#8a6d1f', letterSpacing: .3, marginBottom: 4 },
+  confirmBody: { fontSize: 14, color: '#5c4a10', lineHeight: 1.45 },
+  confirmDone: { fontSize: 13.5, fontWeight: 600, color: '#0f766e', marginTop: 6 },
   dot: { width: 7, height: 7, borderRadius: '50%', background: '#8696a0', display: 'inline-block', animation: 'habieBlink 1.3s infinite' },
   msgs: { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px 5%', display: 'flex', flexDirection: 'column', gap: 3 },
-  b: { maxWidth: 'min(78%, 560px)', padding: '7px 10px 6px', borderRadius: 10, fontSize: 14.4, boxShadow: '0 1px 1px rgba(0,0,0,.08)', wordWrap: 'break-word', whiteSpace: 'pre-wrap' },
+  b: { maxWidth: 'min(78%, 560px)', padding: '7px 10px 6px', borderRadius: 10, fontSize: 15.5, boxShadow: '0 1px 1px rgba(0,0,0,.08)', wordWrap: 'break-word', whiteSpace: 'pre-wrap' },
   in: { alignSelf: 'flex-start', background: '#fff', borderTopLeftRadius: 3 },
   out: { alignSelf: 'flex-end', background: '#d4f2e7', borderTopRightRadius: 3 },
-  meta: { float: 'right', margin: '6px 0 -2px 10px', fontSize: 10.5, color: '#8696a0' },
+  meta: { float: 'right', margin: '6px 0 -2px 10px', fontSize: 11.5, color: '#8696a0' },
   composer: { display: 'flex', gap: 8, padding: 10, background: '#f7f9fa', borderTop: '1px solid #e3e7ea', flexShrink: 0, paddingBottom: 'calc(10px + env(safe-area-inset-bottom))' },
   backdrop: { position: 'absolute', inset: 0, background: 'rgba(11,20,26,.45)', opacity: 0, pointerEvents: 'none', transition: 'opacity .2s', zIndex: 5 },
   backdropOn: { opacity: 1, pointerEvents: 'auto' },
