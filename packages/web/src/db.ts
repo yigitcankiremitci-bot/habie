@@ -17,6 +17,16 @@ export interface Message {
   sentAt: string;
   state: 'pending' | 'sent' | 'delivered' | 'read';
   mine: 0 | 1;                // Dexie boolean indeksleyemez
+  /**
+   * Yalnızca ajan sohbetlerinde kullanılıyor: onay bekleyen bir araç çağrısı.
+   * İndekslenmiyor, bu yüzden Dexie şema sürümü artırmaya gerek yok.
+   */
+  pending?: {
+    actionId: string;
+    toolName: string;
+    summary: string;
+    resolved?: 'confirmed' | 'cancelled';
+  };
 }
 
 export interface Conversation {
@@ -76,14 +86,29 @@ export class HabieDB extends Dexie {
 export const db = new HabieDB();
 
 /**
- * Kalıcı depolama talebi. WebKit bunu sezgisel veriyor; en güçlü sinyal
- * sitenin Ana Ekrana eklenmiş olması. Bu yüzden dönen değeri UI'da göster —
- * false ise kullanıcıyı PWA kurulumuna ve yedeklemeye yönlendir.
+ * İstemci tarafı UUIDv7 — ilk 48 bit zaman damgası.
+ *
+ * crypto.randomUUID() KULLANMA: mesajlar Dexie'de `sortBy('id')` ile
+ * sıralanıyor, rastgele v4 kimlikler sohbeti karıştırır. v7 leksikografik
+ * sıralamayı kronolojik sıralamaya eşitliyor ve sunucunun ürettiği
+ * kimliklerle aynı biçimde.
  */
-export async function requestPersistence(): Promise<boolean> {
-  if (!navigator.storage?.persist) return false;
-  if (await navigator.storage.persisted()) return true;
-  return navigator.storage.persist();
+export function uuidv7(): string {
+  const ts = Date.now();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+
+  b[0] = (ts / 2 ** 40) & 0xff;
+  b[1] = (ts / 2 ** 32) & 0xff;
+  b[2] = (ts / 2 ** 24) & 0xff;
+  b[3] = (ts / 2 ** 16) & 0xff;
+  b[4] = (ts / 2 ** 8) & 0xff;
+  b[5] = ts & 0xff;
+
+  b[6] = (b[6] & 0x0f) | 0x70; // sürüm 7
+  b[8] = (b[8] & 0x3f) | 0x80; // varyant
+
+  const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
 export async function storageEstimate() {

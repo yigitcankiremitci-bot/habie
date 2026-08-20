@@ -1,9 +1,14 @@
-import { db, type Message } from './db';
+import { db, uuidv7, type Message } from './db';
 
 export type HabieConfig = {
-  gatewayUrl: string;      // https://habie-gateway.onrender.com
+  gatewayUrl: string;      // https://habie.onrender.com
   assertion: string;       // host uygulamanın imzaladığı JWT
   deviceName?: string;
+  /**
+   * Host uygulamanın ajanı. Verilirse sohbet listesinin en üstünde sabit bir
+   * satır olarak çıkar. Habie gateway'i bu akışa hiç girmez (bkz. agent.ts).
+   */
+  agent?: import('./agent').AgentConfig;
 };
 
 type Handler = (e: { type: string; [k: string]: any }) => void;
@@ -18,6 +23,8 @@ export class Transport {
   private handlers = new Set<Handler>();
   private retry = 0;
   private closed = false;
+  /** Açık olan sohbet — gelen mesaj buraya aitse okunmamış sayılmaz. */
+  private activeId: string | null = null;
 
   constructor(private cfg: HabieConfig) {}
 
@@ -67,8 +74,16 @@ export class Transport {
 
   private openSocket() {
     if (this.closed) return;
-    const url = this.cfg.gatewayUrl.replace(/^http/, 'ws') + `/ws?token=${this.token}`;
-    this.ws = new WebSocket(url);
+
+    /**
+     * gatewayUrl göreli olabilir ('/habie-api' — geliştirmede Vite proxy'si).
+     * WebSocket mutlak URL ister, o yüzden sayfanın origin'iyle tamamlıyoruz.
+     */
+    const base = this.cfg.gatewayUrl.startsWith('/')
+      ? location.origin.replace(/^http/, 'ws') + this.cfg.gatewayUrl
+      : this.cfg.gatewayUrl.replace(/^http/, 'ws');
+
+    this.ws = new WebSocket(`${base}/ws?token=${this.token}`);
 
     this.ws.onopen = () => {
       this.retry = 0;
@@ -98,6 +113,10 @@ export class Transport {
   }
 
   /** Gelen zarfı yerel depoya yaz. Tekilleştirme id üzerinden — tekrar teslim zararsız. */
+  setActive(conversationId: string | null) {
+    this.activeId = conversationId;
+  }
+
   private async ingest(env: any) {
     const me = await db.get<any>('me', null);
     const msg: Message = {
@@ -109,8 +128,17 @@ export class Transport {
       state: 'delivered',
       mine: env.senderId === me?.id ? 1 : 0,
     };
+    // Aynı zarf iki kez gelebilir (WS + catchUp) — tekrar sayma
+    const known = await db.messages.get(env.id);
     await db.messages.put(msg);
-    await db.conversations.update(env.conversationId, { lastMessageAt: env.sentAt });
+
+    const patch: any = { lastMessageAt: env.sentAt };
+    if (!known && msg.mine === 0 && env.conversationId !== this.activeId) {
+      const c = await db.conversations.get(env.conversationId);
+      patch.unread = (c?.unread ?? 0) + 1;
+    }
+    await db.conversations.update(env.conversationId, patch);
+
     this.emit({ type: 'message', message: msg });
   }
 
@@ -164,7 +192,7 @@ export class Transport {
    * Ağ yoksa outbox'ta bekler, bağlantı gelince drainOutbox gönderir.
    */
   async send(target: { conversationId?: string; toUserId?: string }, body: string) {
-    const clientId = crypto.randomUUID();
+    const clientId = uuidv7();   // v4 DEĞİL: sıralama id'ye dayanıyor
     const me = await db.get<any>('me', null);
 
     const local: Message = {
@@ -226,6 +254,12 @@ export class Transport {
       this.draining = false;
     }
   }
+
+  pushKey = () => this.api('/push/key');
+  savePushSubscription = (subscription: PushSubscriptionJSON) =>
+    this.api('/push/subscribe', { method: 'POST', body: JSON.stringify({ subscription }) });
+  removePushSubscription = () =>
+    this.api('/push/unsubscribe', { method: 'POST' });
 
   setUsername = (username: string) =>
     this.api('/username', { method: 'POST', body: JSON.stringify({ username }) });

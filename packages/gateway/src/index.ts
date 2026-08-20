@@ -11,6 +11,7 @@ import { router } from './routes.js';
 import { migrate, syncAppSecrets, sweep, q, getPool } from './db.js';
 import { verifySession } from './auth.js';
 import * as hub from './hub.js';
+import { initPush } from './push.js';
 import { notifyUser } from './notify.js';
 import { ackEnvelopes } from './ack.js';
 
@@ -113,6 +114,9 @@ setInterval(() => {
     if (ws.readyState === 1) ws.ping();
   }
 }, 30_000);
+
+// Bildirimler veritabanından bağımsız — anahtar yoksa sessizce kapalı kalır.
+initPush();
 
 try {
   await migrate();

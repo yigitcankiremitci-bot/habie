@@ -1,8 +1,3 @@
 node_modules
 dist
-
-# Tüm .env türevleri — .env.save, .env.local, .env.backup dahil.
-# nano/editörler bu dosyaları arkanda bırakabiliyor ve içlerinde secret oluyor.
 .env
-.env.*
-!.env.example

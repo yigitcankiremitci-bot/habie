@@ -5,6 +5,7 @@ import { verifyAssertion, resolveUser, registerDevice, signSession, verifySessio
 import * as hub from './hub.js';
 import { notifyUser } from './notify.js';
 import { ackEnvelopes } from './ack.js';
+import * as push from './push.js';
 
 export const router = Router();
 
@@ -268,12 +269,37 @@ router.post('/messages', auth, async (req, res) => {
     );
   }
 
+  // Bildirimde gösterilecek gönderen adı
+  const [sender] = await q<{ display_name: string; username: string }>(
+    'SELECT display_name, username FROM habie_users WHERE id = $1', [uid]
+  );
+  const senderName = sender?.display_name || (sender?.username ? '@' + sender.username : 'Yeni mesaj');
+
   let online = 0;
+  const offline: string[] = [];
+
   for (const t of targets) {
-    if (hub.push(t.id, { type: 'envelope', envelope: { id: envelopeId, conversationId: convId, senderId: uid, body, sentAt: new Date().toISOString() } })) {
-      online++;
-    }
-    // else → burada Web Push "uyan" sinyali gönderilir (içerik YOK, sadece conversationId)
+    const delivered = hub.push(t.id, {
+      type: 'envelope',
+      envelope: { id: envelopeId, conversationId: convId, senderId: uid, body, sentAt: new Date().toISOString() },
+    });
+    if (delivered) online++;
+    else offline.push(t.id);
+  }
+
+  // Bağlı olmayan cihazlara bildirim. Yanıtı bekletmiyoruz — gönderim
+  // gecikmesi push servisine bağlı olmasın.
+  if (offline.length) {
+    void Promise.all(
+      offline.map(deviceId =>
+        push.sendToDevice(deviceId, {
+          title: senderName,
+          body: push.preview(String(body ?? '')),
+          conversationId: convId,
+          tag: convId,   // aynı sohbetten gelenler üst üste yığılmasın
+        }).catch(() => false)
+      )
+    );
   }
 
   res.json({ id: envelopeId, clientId, conversationId: convId, targets: targets.length, delivered: online });
@@ -321,6 +347,25 @@ router.post('/dev-token', async (req, res) => {
       { expiresIn: '5m' }
     ),
   });
+});
+
+/* ------------------------------------------------------------------ */
+/* Web Push                                                            */
+/* ------------------------------------------------------------------ */
+router.get('/push/key', (_req, res) => {
+  res.json({ enabled: push.pushEnabled(), publicKey: push.vapidPublicKey() });
+});
+
+router.post('/push/subscribe', auth, async (req, res) => {
+  const sub = req.body?.subscription;
+  if (!sub?.endpoint) return res.status(400).json({ error: 'abonelik geçersiz' });
+  await push.saveSubscription(req.session!.did, sub);
+  res.json({ ok: true });
+});
+
+router.post('/push/unsubscribe', auth, async (req, res) => {
+  await push.clearSubscription(req.session!.did);
+  res.json({ ok: true });
 });
 
 /** Gözlemlenebilirlik: kuyruğun gerçekten boş kaldığını görmek için. */

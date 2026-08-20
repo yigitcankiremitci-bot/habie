@@ -2,9 +2,20 @@
 <html lang="tr">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Habie — demo host uygulama</title>
-    <style>html,body,#root{height:100%;margin:0}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Habie</title>
+
+    <!-- PWA: iOS'ta hem kalıcı depolamanın hem Web Push'un ön şartı ana ekrana eklenmek -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0f766e" />
+
+    <!-- iOS ana ekran uygulaması -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Habie" />
+
+    <style>html,body,#root{height:100%;margin:0;overscroll-behavior:none}</style>
   </head>
   <body>
     <div id="root"></div>

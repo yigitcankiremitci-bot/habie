@@ -14,7 +14,8 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:reset": "docker compose down -v && docker compose up -d",
-    "test:db": "node scripts/test-db.mjs"
+    "test:db": "node scripts/test-db.mjs",
+    "vapid": "node scripts/gen-vapid.mjs"
   },
   "dependencies": {
     "jsonwebtoken": "^9.0.2"
