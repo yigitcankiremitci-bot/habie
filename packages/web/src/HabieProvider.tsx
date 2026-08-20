@@ -25,6 +25,7 @@ type Ctx = {
   contacts: Contact[];
   /** Host uygulamanın ajanı (Lio). Yapılandırılmadıysa null. */
   agent: AgentClient | null;
+  logoUrl?: string;
   messages: Record<string, Message[]>;
   reload: () => Promise<void>;
 };
@@ -164,7 +165,7 @@ export function HabieProvider({ config, children }: { config: HabieConfig; child
   }, [transport]);
 
   return (
-    <HabieCtx.Provider value={{ transport, agent, ready, online, me, needsUsername, persistent, setup, refreshSetup, turnOnNotifications, setActive, conversations, contacts, messages, reload }}>
+    <HabieCtx.Provider value={{ transport, agent, logoUrl: config.logoUrl, ready, online, me, needsUsername, persistent, setup, refreshSetup, turnOnNotifications, setActive, conversations, contacts, messages, reload }}>
       {children}
     </HabieCtx.Provider>
   );

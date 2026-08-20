@@ -28,7 +28,7 @@ export function HabieChat() {
   const {
     ready, online, me, needsUsername,
     setup, refreshSetup, turnOnNotifications, setActive,
-    conversations, contacts, messages, transport, agent, reload,
+    conversations, contacts, messages, transport, agent, logoUrl, reload,
   } = useHabie();
 
   // TÜM hook'lar erken return'lerden ÖNCE — React kuralları gereği
@@ -236,6 +236,7 @@ export function HabieChat() {
         {!wide && cur && (
           <button style={S.iconBtn} onClick={() => setDrawer(false)} title="Kapat">✕</button>
         )}
+        {logoUrl && <img src={logoUrl} alt="" style={S.logoSm} />}
         <b>Habie</b>
         <span style={{ marginLeft: 'auto', fontSize: 11, color: online ? '#0f766e' : '#b45309' }}>
           {online ? '● çevrimiçi' : '○ bağlanıyor'}
@@ -525,6 +526,7 @@ const S: Record<string, React.CSSProperties> = {
   chatTitle: { fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   sub: { fontSize: 12, color: '#667781', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   center: { flex: 1, display: 'grid', placeItems: 'center', padding: 24, height: '100%' },
+  logoSm: { width: 26, height: 26, objectFit: 'contain', flexShrink: 0 },
   iconBtn: { border: 0, background: 'transparent', color: '#41525d', fontSize: 19, lineHeight: 1, cursor: 'pointer', padding: '2px 4px', flexShrink: 0 },
   warn: { display: 'flex', gap: 8, alignItems: 'flex-start', margin: '8px 10px 0', padding: 9, borderRadius: 8, background: '#fff5e0', color: '#7a5a12', fontSize: 11.5, lineHeight: 1.45, border: '1px solid #f0dfb4' },
   warnX: { border: 0, background: 'transparent', color: '#a08340', cursor: 'pointer', fontSize: 12, padding: 0, lineHeight: 1 },

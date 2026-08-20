@@ -4,6 +4,8 @@ export type HabieConfig = {
   gatewayUrl: string;      // https://habie.onrender.com
   assertion: string;       // host uygulamanın imzaladığı JWT
   deviceName?: string;
+  /** Başlıkta gösterilecek logo. Verilmezse yalnızca "Habie" yazısı çıkar. */
+  logoUrl?: string;
   /**
    * Host uygulamanın ajanı. Verilirse sohbet listesinin en üstünde sabit bir
    * satır olarak çıkar. Habie gateway'i bu akışa hiç girmez (bkz. agent.ts).

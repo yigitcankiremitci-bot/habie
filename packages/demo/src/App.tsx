@@ -125,12 +125,21 @@ export default function App() {
     location.reload();
   }
 
-  if (busy && !session) return <Center>Yükleniyor…</Center>;
+  if (busy && !session) return (
+    <Center>
+      <div style={{ textAlign: 'center', color: '#667781' }}>
+        <img src="/logo.png" alt="" width={64} height={64}
+             style={{ objectFit: 'contain', opacity: .9, display: 'block', margin: '0 auto 10px' }} />
+        Yükleniyor…
+      </div>
+    </Center>
+  );
   if (!session) return <SignIn onLogin={login} onDemo={demoPersona} err={err} />;
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, sans-serif' }}>
       <div style={bar}>
+        <img src="/logo.png" alt="" width={20} height={20} style={{ objectFit: 'contain' }} />
         <b>{session.mode === 'projelio' ? 'Projelio' : 'Demo'}</b>
         <span style={{ opacity: .7 }}>{session.label}</span>
         {session.agent && <span style={pill}>{session.agent.name} bağlı</span>}
@@ -142,6 +151,7 @@ export default function App() {
             gatewayUrl: GATEWAY,
             assertion: session.assertion,
             deviceName: `${session.label} — tarayıcı`,
+            logoUrl: '/logo.png',
             agent: session.agent,
           }}
         >
@@ -163,10 +173,14 @@ function SignIn({ onLogin, onDemo, err }: {
   return (
     <Center>
       <div style={{ width: 320 }}>
-        <h2 style={{ margin: '0 0 4px', fontSize: 20 }}>Habie</h2>
-        <p style={{ color: '#667781', fontSize: 13, marginTop: 0 }}>
-          Lio ile konuşmak için Projelio hesabınla gir.
-        </p>
+        <div style={{ textAlign: 'center', marginBottom: 18 }}>
+          <img src="/logo.png" alt="Habie" width={92} height={92}
+               style={{ objectFit: 'contain', display: 'block', margin: '0 auto 10px' }} />
+          <h2 style={{ margin: 0, fontSize: 22, letterSpacing: -.3 }}>Habie</h2>
+          <p style={{ color: '#667781', fontSize: 13, margin: '4px 0 0' }}>
+            Lio ile konuşmak için Projelio hesabınla gir.
+          </p>
+        </div>
 
         <input style={inp} placeholder="e-posta" value={email} autoComplete="username"
                onChange={e => setEmail(e.target.value)} />
